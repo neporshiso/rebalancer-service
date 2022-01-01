@@ -17,8 +17,8 @@ public class RebalancerController {
 
     @PostMapping("/portfolio")
     public RebalancedPortfolio rebalancePortfolio(@RequestBody RebalancerRequest req) {
-        Portfolio intialPortfolio = req.getInitial();
+        Portfolio initialPortfolio = req.getInitial();
         Portfolio desiredPortfolio = req.getDesired();
-        return rebalancerService.calculateDelta(intialPortfolio, desiredPortfolio);
+        return rebalancerService.calculateDelta(initialPortfolio, desiredPortfolio);
     }
 }

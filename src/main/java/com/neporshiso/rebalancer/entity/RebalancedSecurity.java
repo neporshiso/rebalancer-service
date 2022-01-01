@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 
 @Data
 public class RebalancedSecurity {
-    String ticker;
-    Transaction action;
-    BigDecimal deltaUnits;
+    private String ticker;
+    private Transaction action;
+    private BigDecimal deltaUnits;
+    private BigDecimal price;
 }

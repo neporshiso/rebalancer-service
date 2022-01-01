@@ -4,7 +4,6 @@ import com.neporshiso.rebalancer.entity.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +40,7 @@ public class RebalancerService {
             RebalancedSecurity rs = new RebalancedSecurity();
 
             BigDecimal delta = units2.subtract(sec1.getUnits());
+            rs.setPrice(sec2.getPrice());
             rs.setTicker(sec2.getTicker());
             rs.setDeltaUnits(delta);
 
@@ -58,6 +58,15 @@ public class RebalancerService {
 
             rebalancedSecurities.add(rs);
         }
+
+        BigDecimal portfolioValueAfterRebalancing = rebalPortfolio.getPortfolio()
+                .stream()
+                .map(security -> security.getPrice()
+                        .multiply(initialPortfolioMap.get(security.getTicker()).getUnits().add(security.getDeltaUnits())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal portfolioValueDelta = totalPortfolioValue.subtract(portfolioValueAfterRebalancing);
+        rebalPortfolio.setUnallocatedValue(portfolioValueDelta);
 
         return rebalPortfolio;
     }
