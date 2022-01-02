@@ -8,6 +8,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ public class RebalancerService {
 
         for (Security sec2 : desired.getSecurities()) {
 
-            Security sec1 = initialPortfolioMap.get(sec2.getTicker());
+            Security sec1 = Optional.ofNullable(initialPortfolioMap.get(sec2.getTicker())).orElseGet(() -> new Security(BigDecimal.valueOf(0)));
 
             BigDecimal units2 = sec2.getWeight()
                     .multiply(totalPortfolioValue)
@@ -37,21 +38,24 @@ public class RebalancerService {
             RebalancedSecurity rs = new RebalancedSecurity();
 
             BigDecimal delta = units2.subtract(sec1.getUnits());
+//            Could use @Builder here...
             rs.setDesiredWeight(sec2.getWeight());
-            rs.setActualWeight(units2.multiply(sec2.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
+            rs.setWeight(units2.multiply(sec2.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
             rs.setPrice(sec2.getPrice());
             rs.setTicker(sec2.getTicker());
             rs.setDeltaUnits(delta);
+            rs.setUnits(units2);
 
-            if (units2.compareTo(sec1.getUnits()) > 0 ) {
+            long diff = units2.compareTo(sec1.getUnits());
+            if (diff > 0 ) {
                 rs.setAction(Transaction.BUY);
             }
 
-            if (units2.compareTo(sec1.getUnits()) < 0 ) {
+            if (diff < 0 ) {
                 rs.setAction(Transaction.SELL);
             }
 
-            if (units2.compareTo(sec1.getUnits()) == 0 ) {
+            if (diff == 0 ) {
                 rs.setAction(Transaction.HOLD);
             }
 
@@ -60,8 +64,7 @@ public class RebalancerService {
 
         BigDecimal portfolioValueAfterRebalancing = rebalPortfolio.getPortfolio()
                 .stream()
-                .map(security -> security.getPrice()
-                        .multiply(initialPortfolioMap.get(security.getTicker()).getUnits().add(security.getDeltaUnits())))
+                .map(rs -> rs.getPrice().multiply(rs.getUnits()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal portfolioValueDelta = totalPortfolioValue.subtract(portfolioValueAfterRebalancing);
