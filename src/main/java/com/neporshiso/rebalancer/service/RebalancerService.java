@@ -26,20 +26,19 @@ public class RebalancerService {
                 .map(security -> security.getPrice().multiply(security.getUnits()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-
-
         for (Security sec2 : desired.getSecurities()) {
 
             Security sec1 = initialPortfolioMap.get(sec2.getTicker());
 
             BigDecimal units2 = sec2.getWeight()
                     .multiply(totalPortfolioValue)
-                    .divide(sec2.getPrice())
-                    .setScale(0, RoundingMode.FLOOR);
+                    .divide(sec2.getPrice(), 0, RoundingMode.FLOOR);
 
             RebalancedSecurity rs = new RebalancedSecurity();
 
             BigDecimal delta = units2.subtract(sec1.getUnits());
+            rs.setDesiredWeight(sec2.getWeight());
+            rs.setActualWeight(units2.multiply(sec2.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
             rs.setPrice(sec2.getPrice());
             rs.setTicker(sec2.getTicker());
             rs.setDeltaUnits(delta);

@@ -10,4 +10,6 @@ public class RebalancedSecurity {
     private Transaction action;
     private BigDecimal deltaUnits;
     private BigDecimal price;
+    private BigDecimal desiredWeight;
+    private BigDecimal actualWeight;
 }
