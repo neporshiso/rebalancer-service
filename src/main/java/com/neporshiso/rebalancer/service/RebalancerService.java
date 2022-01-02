@@ -38,14 +38,14 @@ public class RebalancerService {
             RebalancedSecurity rs = new RebalancedSecurity();
 
             BigDecimal delta = units2.subtract(sec1.getUnits());
-//            Could use @Builder here...
+            // TODO: Could use @Builder here...
             rs.setDesiredWeight(sec2.getWeight());
             rs.setWeight(units2.multiply(sec2.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
             rs.setPrice(sec2.getPrice());
             rs.setTicker(sec2.getTicker());
             rs.setDeltaUnits(delta);
             rs.setUnits(units2);
-
+            // TODO: is long the right type here?
             long diff = units2.compareTo(sec1.getUnits());
             if (diff > 0 ) {
                 rs.setAction(Transaction.BUY);
