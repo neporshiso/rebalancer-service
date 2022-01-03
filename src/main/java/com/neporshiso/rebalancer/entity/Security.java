@@ -8,12 +8,13 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 public class Security {
-    private BigDecimal units;
-    private BigDecimal price;
-    private BigDecimal weight;
     private String ticker;
+    private BigDecimal currentUnits;
+    private BigDecimal price;
+    private BigDecimal currentWeight;
+    private BigDecimal desiredWeight;
 
     public Security(BigDecimal units) {
-        this.units = units;
+        this.currentUnits = units;
     }
 }

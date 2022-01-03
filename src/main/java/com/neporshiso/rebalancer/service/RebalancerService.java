@@ -7,46 +7,34 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class RebalancerService {
 
-    public RebalancedPortfolio calculateDelta(Portfolio initial, Portfolio desired) {
-        Map<String, Security> initialPortfolioMap = initial.getSecurities()
-                .stream()
-                .collect(Collectors.toMap(Security::getTicker, item -> item));
+    public RebalancedPortfolio calculateDelta(Portfolio p) {
 
         List<RebalancedSecurity> rebalancedSecurities = new ArrayList<>();
         RebalancedPortfolio rebalPortfolio = new RebalancedPortfolio(rebalancedSecurities);
 
-        BigDecimal totalPortfolioValue = initial.getSecurities()
-                .stream()
-                .map(security -> security.getPrice().multiply(security.getUnits()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPortfolioValue = p.getTotalValue();
 
-        for (Security sec2 : desired.getSecurities()) {
-
-            Security sec1 = Optional.ofNullable(initialPortfolioMap.get(sec2.getTicker())).orElseGet(() -> new Security(BigDecimal.valueOf(0)));
-
-            BigDecimal units2 = sec2.getWeight()
-                    .multiply(totalPortfolioValue)
-                    .divide(sec2.getPrice(), 0, RoundingMode.FLOOR);
-
+        for (Security sec : p.getSecurities()) {
             RebalancedSecurity rs = new RebalancedSecurity();
 
-            BigDecimal delta = units2.subtract(sec1.getUnits());
-            // TODO: Could use @Builder here...
-            rs.setDesiredWeight(sec2.getWeight());
-            rs.setWeight(units2.multiply(sec2.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
-            rs.setPrice(sec2.getPrice());
-            rs.setTicker(sec2.getTicker());
+            BigDecimal unitsAfterRebalance = sec.getDesiredWeight()
+                    .multiply(totalPortfolioValue)
+                    .divide(sec.getPrice(), 0, RoundingMode.FLOOR);
+
+            BigDecimal delta = unitsAfterRebalance.subtract(sec.getCurrentUnits());
+            rs.setDesiredWeight(sec.getDesiredWeight());
+            rs.setTicker(sec.getTicker());
+            rs.setPrice(sec.getPrice());
+            rs.setCurrentWeight(unitsAfterRebalance.multiply(sec.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
             rs.setDeltaUnits(delta);
-            rs.setUnits(units2);
+            rs.setCurrentUnits(unitsAfterRebalance);
             // TODO: is long the right type here?
-            long diff = units2.compareTo(sec1.getUnits());
+            long diff = unitsAfterRebalance.compareTo(sec.getCurrentUnits());
+
             if (diff > 0 ) {
                 rs.setAction(Transaction.BUY);
             }
@@ -64,7 +52,7 @@ public class RebalancerService {
 
         BigDecimal portfolioValueAfterRebalancing = rebalPortfolio.getPortfolio()
                 .stream()
-                .map(rs -> rs.getPrice().multiply(rs.getUnits()))
+                .map(rs -> rs.getPrice().multiply(rs.getCurrentUnits()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal portfolioValueDelta = totalPortfolioValue.subtract(portfolioValueAfterRebalancing);
