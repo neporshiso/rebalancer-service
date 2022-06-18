@@ -11,6 +11,7 @@ public class RebalancedPortfolio {
     private List<RebalancedSecurity> portfolio;
     // Due to portfolio weights a user can choose, there is no guarantee that all value will be evenly reallocated
     private BigDecimal unallocatedValue;
+    private BigDecimal totalValue;
 
     public RebalancedPortfolio(List<RebalancedSecurity> portfolio) {
         this.portfolio = portfolio;

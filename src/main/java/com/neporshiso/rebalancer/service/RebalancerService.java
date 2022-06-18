@@ -32,6 +32,7 @@ public class RebalancerService {
             rs.setCurrentWeight(unitsAfterRebalance.multiply(sec.getPrice()).divide(totalPortfolioValue, 4, RoundingMode.HALF_DOWN));
             rs.setDeltaUnits(delta);
             rs.setCurrentUnits(unitsAfterRebalance);
+            rs.setBalance(unitsAfterRebalance.multiply(sec.getPrice()));
             // TODO: is long the right type here?
             long diff = unitsAfterRebalance.compareTo(sec.getCurrentUnits());
 
@@ -57,7 +58,8 @@ public class RebalancerService {
 
         BigDecimal portfolioValueDelta = totalPortfolioValue.subtract(portfolioValueAfterRebalancing);
         rebalPortfolio.setUnallocatedValue(portfolioValueDelta);
-
+        rebalPortfolio.setTotalValue(totalPortfolioValue);
+    
         return rebalPortfolio;
     }
 
